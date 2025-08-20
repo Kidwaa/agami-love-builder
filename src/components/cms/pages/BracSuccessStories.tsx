@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +17,8 @@ interface ImageItem {
 
 const BracSuccessStories = () => {
   const [homepageImages, setHomepageImages] = useState<ImageItem[]>([]);
-  const [content, setContent] = useState('');
+  const [contentBangla, setContentBangla] = useState('');
+  const [contentEnglish, setContentEnglish] = useState('');
   const [showRemoveImageDialog, setShowRemoveImageDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -46,10 +46,19 @@ const BracSuccessStories = () => {
       return;
     }
 
-    if (!content.trim()) {
+    if (!contentBangla.trim()) {
       toast({
         title: "Validation Error",
-        description: "Content is required",
+        description: "Bangla content is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!contentEnglish.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "English content is required",
         variant: "destructive",
       });
       return;
@@ -144,26 +153,80 @@ const BracSuccessStories = () => {
             )}
           </div>
 
-          {/* Content Editor */}
-          <div className="space-y-4">
-            <Label htmlFor="content" className="text-base font-medium">
-              Content <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="content"
-              placeholder="Write your success stories content here..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[300px]"
-            />
+          {/* Content Editors */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="content-bangla" className="text-base font-medium">
+                Content (Bangla) <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="content-bangla"
+                placeholder="বাংলা সফলতার গল্প লিখুন..."
+                value={contentBangla}
+                onChange={(e) => setContentBangla(e.target.value)}
+                className="min-h-[300px] mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="content-english" className="text-base font-medium">
+                Content (English) <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="content-english"
+                placeholder="Write your success stories content here..."
+                value={contentEnglish}
+                onChange={(e) => setContentEnglish(e.target.value)}
+                className="min-h-[300px] mt-1"
+              />
+            </div>
           </div>
 
           {/* Mobile Preview */}
-          <Tabs defaultValue="desktop" className="w-full">
+          <Tabs defaultValue="bangla" className="w-full">
             <TabsList>
-              <TabsTrigger value="desktop">Desktop Preview</TabsTrigger>
-              <TabsTrigger value="mobile">Mobile Preview</TabsTrigger>
+              <TabsTrigger value="bangla">Bangla Preview</TabsTrigger>
+              <TabsTrigger value="english">English Preview</TabsTrigger>
             </TabsList>
+            <TabsContent value="bangla" className="mt-4">
+              <Card className="p-4">
+                <div className="space-y-4">
+                  {homepageImages.length > 0 && (
+                    <img
+                      src={homepageImages[0].url}
+                      alt="Homepage"
+                      className="w-full max-w-lg h-48 object-cover rounded-lg"
+                    />
+                  )}
+                  <div className="prose prose-sm max-w-none">
+                    {contentBangla ? (
+                      <div className="whitespace-pre-wrap">{contentBangla}</div>
+                    ) : (
+                      <p className="text-muted-foreground italic">বাংলা প্রিভিউ এখানে দেখাবে...</p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
+            <TabsContent value="english" className="mt-4">
+              <Card className="p-4">
+                <div className="space-y-4">
+                  {homepageImages.length > 0 && (
+                    <img
+                      src={homepageImages[0].url}
+                      alt="Homepage"
+                      className="w-full max-w-lg h-48 object-cover rounded-lg"
+                    />
+                  )}
+                  <div className="prose prose-sm max-w-none">
+                    {contentEnglish ? (
+                      <div className="whitespace-pre-wrap">{contentEnglish}</div>
+                    ) : (
+                      <p className="text-muted-foreground italic">Content preview will appear here...</p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </TabsContent>
             <TabsContent value="desktop" className="mt-4">
               <Card className="p-4">
                 <div className="space-y-4">
@@ -175,8 +238,8 @@ const BracSuccessStories = () => {
                     />
                   )}
                   <div className="prose prose-sm max-w-none">
-                    {content ? (
-                      <div className="whitespace-pre-wrap">{content}</div>
+                    {contentEnglish ? (
+                      <div className="whitespace-pre-wrap">{contentEnglish}</div>
                     ) : (
                       <p className="text-muted-foreground italic">Content preview will appear here...</p>
                     )}
@@ -196,8 +259,8 @@ const BracSuccessStories = () => {
                       />
                     )}
                     <div className="text-sm">
-                      {content ? (
-                        <div className="whitespace-pre-wrap">{content}</div>
+                      {contentEnglish ? (
+                        <div className="whitespace-pre-wrap">{contentEnglish}</div>
                       ) : (
                         <p className="text-muted-foreground italic">Mobile content preview...</p>
                       )}
