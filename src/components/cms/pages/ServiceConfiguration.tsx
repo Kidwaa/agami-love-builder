@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -141,8 +142,11 @@ const ServiceConfiguration = () => {
     if (service.purposeImage.length === 0) return "Purpose page image is required";
     if (!service.titleBangla.trim()) return "Bangla title is required";
     if (!service.titleEnglish.trim()) return "English title is required";
-    if (service.tenors.length === 0) return "At least one tenor value is required";
-    if (service.tenors.some(t => !t.unit)) return "Please select Years or Months for each tenor value";
+    // Only validate tenors for savings services
+    if (activeTab === 'savings') {
+      if (service.tenors.length === 0) return "At least one tenor value is required";
+      if (service.tenors.some(t => !t.unit)) return "Please select Years or Months for each tenor value";
+    }
     if (!service.detailBangla.trim()) return "Bangla detail content is required";
     if (!service.detailEnglish.trim()) return "English detail content is required";
     return null;
@@ -271,62 +275,64 @@ const ServiceConfiguration = () => {
           </div>
         </div>
 
-        {/* Tenor Management */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">
-              Tenor Values <span className="text-destructive">*</span>
-            </Label>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleAddTenor(service.id)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Tenor
-            </Button>
-          </div>
-          
-          {service.tenors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tenor values added yet</p>
-          ) : (
-            <div className="space-y-2">
-              {service.tenors.map((tenor) => (
-                <div key={tenor.id} className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min="1"
-                    value={tenor.value}
-                    onChange={(e) => handleTenorChange(service.id, tenor.id, 'value', parseInt(e.target.value) || 1)}
-                    className="w-24"
-                  />
-                  <Select
-                    value={tenor.unit}
-                    onValueChange={(value) => handleTenorChange(service.id, tenor.id, 'unit', value)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Years">Years</SelectItem>
-                      <SelectItem value="Months">Months</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Badge variant="secondary">
-                    {tenor.value} {tenor.unit}
-                  </Badge>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleRemoveTenor(service.id, tenor.id)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
+        {/* Tenor Management - Only show for savings services */}
+        {activeTab === 'savings' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">
+                Tenor Values <span className="text-destructive">*</span>
+              </Label>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleAddTenor(service.id)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Tenor
+              </Button>
             </div>
-          )}
-        </div>
+            
+            {service.tenors.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No tenor values added yet</p>
+            ) : (
+              <div className="space-y-2">
+                {service.tenors.map((tenor) => (
+                  <div key={tenor.id} className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min="1"
+                      value={tenor.value}
+                      onChange={(e) => handleTenorChange(service.id, tenor.id, 'value', parseInt(e.target.value) || 1)}
+                      className="w-24"
+                    />
+                    <Select
+                      value={tenor.unit}
+                      onValueChange={(value) => handleTenorChange(service.id, tenor.id, 'unit', value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Years">Years</SelectItem>
+                        <SelectItem value="Months">Months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Badge variant="secondary">
+                      {tenor.value} {tenor.unit}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleRemoveTenor(service.id, tenor.id)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Detail Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -373,9 +379,11 @@ const ServiceConfiguration = () => {
                   />
                 )}
                 <div className="font-medium text-sm">{service.titleBangla || 'বাংলা শিরোনাম'}</div>
-                <div className="text-xs">
-                  {service.tenors.map(t => `${t.value} ${t.unit}`).join(', ') || 'টেনর তথ্য'}
-                </div>
+                {activeTab === 'savings' && (
+                  <div className="text-xs">
+                    {service.tenors.map(t => `${t.value} ${t.unit}`).join(', ') || 'টেনর তথ্য'}
+                  </div>
+                )}
                 <div className="text-xs">
                   {service.detailBangla || 'বিস্তারিত তথ্য...'}
                 </div>
@@ -393,9 +401,11 @@ const ServiceConfiguration = () => {
                   />
                 )}
                 <div className="font-medium text-sm">{service.titleEnglish || 'English Title'}</div>
-                <div className="text-xs">
-                  {service.tenors.map(t => `${t.value} ${t.unit}`).join(', ') || 'Tenor information'}
-                </div>
+                {activeTab === 'savings' && (
+                  <div className="text-xs">
+                    {service.tenors.map(t => `${t.value} ${t.unit}`).join(', ') || 'Tenor information'}
+                  </div>
+                )}
                 <div className="text-xs">
                   {service.detailEnglish || 'Detail information...'}
                 </div>
