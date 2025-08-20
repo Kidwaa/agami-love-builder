@@ -9,28 +9,27 @@ import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '../ImageUpload';
 import ConfirmationDialog from '../ConfirmationDialog';
 
+interface ImageItem {
+  id: string;
+  url: string;
+  file?: File;
+  link?: string;
+}
+
 const BracSuccessStories = () => {
-  const [homepageImage, setHomepageImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [homepageImages, setHomepageImages] = useState<ImageItem[]>([]);
   const [content, setContent] = useState('');
   const [showRemoveImageDialog, setShowRemoveImageDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const { toast } = useToast();
 
-  const handleImageUpload = (files: File[]) => {
-    const file = files[0];
-    setHomepageImage(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
   const handleRemoveImage = () => {
     setShowRemoveImageDialog(true);
   };
 
   const confirmRemoveImage = () => {
-    setHomepageImage(null);
-    setImagePreview('');
+    setHomepageImages([]);
     toast({
       title: "Image removed",
       description: "Homepage image has been removed",
@@ -38,7 +37,7 @@ const BracSuccessStories = () => {
   };
 
   const handlePublish = () => {
-    if (!homepageImage) {
+    if (homepageImages.length === 0) {
       toast({
         title: "Validation Error",
         description: "Homepage image is required",
@@ -119,10 +118,10 @@ const BracSuccessStories = () => {
               Homepage Image <span className="text-destructive">*</span>
             </Label>
             
-            {imagePreview ? (
+            {homepageImages.length > 0 ? (
               <div className="relative">
                 <img
-                  src={imagePreview}
+                  src={homepageImages[0].url}
                   alt="Homepage"
                   className="w-full max-w-md h-48 object-cover rounded-lg border"
                 />
@@ -137,9 +136,10 @@ const BracSuccessStories = () => {
               </div>
             ) : (
               <ImageUpload
-                onUpload={handleImageUpload}
-                accept="image/jpeg,image/png"
-                maxFiles={1}
+                images={homepageImages}
+                onImagesChange={setHomepageImages}
+                maxImages={1}
+                title="Upload Homepage Image"
               />
             )}
           </div>
@@ -167,9 +167,9 @@ const BracSuccessStories = () => {
             <TabsContent value="desktop" className="mt-4">
               <Card className="p-4">
                 <div className="space-y-4">
-                  {imagePreview && (
+                  {homepageImages.length > 0 && (
                     <img
-                      src={imagePreview}
+                      src={homepageImages[0].url}
                       alt="Homepage"
                       className="w-full max-w-lg h-48 object-cover rounded-lg"
                     />
@@ -188,9 +188,9 @@ const BracSuccessStories = () => {
               <div className="max-w-sm mx-auto">
                 <Card className="p-3">
                   <div className="space-y-3">
-                    {imagePreview && (
+                    {homepageImages.length > 0 && (
                       <img
-                        src={imagePreview}
+                        src={homepageImages[0].url}
                         alt="Homepage"
                         className="w-full h-32 object-cover rounded"
                       />

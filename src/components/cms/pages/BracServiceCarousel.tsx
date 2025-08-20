@@ -11,10 +11,16 @@ import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '../ImageUpload';
 import ConfirmationDialog from '../ConfirmationDialog';
 
+interface ImageItem {
+  id: string;
+  url: string;
+  file?: File;
+  link?: string;
+}
+
 interface ServiceTile {
   id: string;
-  image: File;
-  imagePreview: string;
+  images: ImageItem[];
   contentBangla: string;
   contentEnglish: string;
 }
@@ -31,24 +37,18 @@ const BracServiceCarousel = () => {
   const { toast } = useToast();
 
   const handleAddTile = () => {
-    // This would typically open a modal or form for adding a new tile
-    // For now, we'll create a placeholder
     const newTile: ServiceTile = {
       id: Math.random().toString(36).substr(2, 9),
-      image: new File([''], 'placeholder.jpg'),
-      imagePreview: '/placeholder.svg',
+      images: [],
       contentBangla: '',
       contentEnglish: ''
     };
     setTiles(prev => [...prev, newTile]);
   };
 
-  const handleImageUpload = (tileId: string, files: File[]) => {
-    const file = files[0];
+  const handleImagesChange = (tileId: string, images: ImageItem[]) => {
     setTiles(prev => prev.map(tile => 
-      tile.id === tileId 
-        ? { ...tile, image: file, imagePreview: URL.createObjectURL(file) }
-        : tile
+      tile.id === tileId ? { ...tile, images } : tile
     ));
   };
 
@@ -211,23 +211,14 @@ const BracServiceCarousel = () => {
                     {/* Homepage Image */}
                     <div>
                       <Label className="text-sm font-medium">Homepage Image</Label>
-                      {tile.imagePreview !== '/placeholder.svg' ? (
-                        <div className="mt-2">
-                          <img
-                            src={tile.imagePreview}
-                            alt="Service"
-                            className="w-full max-w-xs h-32 object-cover rounded border"
-                          />
-                        </div>
-                      ) : (
-                        <div className="mt-2">
-                          <ImageUpload
-                            onUpload={(files) => handleImageUpload(tile.id, files)}
-                            accept="image/jpeg,image/png"
-                            maxFiles={1}
-                          />
-                        </div>
-                      )}
+                      <div className="mt-2">
+                        <ImageUpload
+                          images={tile.images}
+                          onImagesChange={(images) => handleImagesChange(tile.id, images)}
+                          maxImages={1}
+                          title="Upload Service Image"
+                        />
+                      </div>
                     </div>
 
                     {/* Content Editors */}
@@ -267,11 +258,13 @@ const BracServiceCarousel = () => {
                       <TabsContent value="bangla">
                         <Card className="p-3 max-w-sm">
                           <div className="space-y-2">
-                            <img
-                              src={tile.imagePreview}
-                              alt="Service"
-                              className="w-full h-24 object-cover rounded"
-                            />
+                            {tile.images.length > 0 && (
+                              <img
+                                src={tile.images[0].url}
+                                alt="Service"
+                                className="w-full h-24 object-cover rounded"
+                              />
+                            )}
                             <div className="text-sm">
                               {tile.contentBangla || <span className="text-muted-foreground italic">বাংলা প্রিভিউ...</span>}
                             </div>
@@ -281,11 +274,13 @@ const BracServiceCarousel = () => {
                       <TabsContent value="english">
                         <Card className="p-3 max-w-sm">
                           <div className="space-y-2">
-                            <img
-                              src={tile.imagePreview}
-                              alt="Service"
-                              className="w-full h-24 object-cover rounded"
-                            />
+                            {tile.images.length > 0 && (
+                              <img
+                                src={tile.images[0].url}
+                                alt="Service"
+                                className="w-full h-24 object-cover rounded"
+                              />
+                            )}
                             <div className="text-sm">
                               {tile.contentEnglish || <span className="text-muted-foreground italic">English preview...</span>}
                             </div>

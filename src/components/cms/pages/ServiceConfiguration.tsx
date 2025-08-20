@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,23 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Plus, Edit, GripVertical } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Trash2, GripVertical, Plus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '../ImageUpload';
 import ConfirmationDialog from '../ConfirmationDialog';
 
+interface ImageItem {
+  id: string;
+  url: string;
+  file?: File;
+  link?: string;
+}
+
 interface TenorValue {
   id: string;
   value: number;
-  unit: 'years' | 'months';
+  unit: 'Years' | 'Months';
 }
 
 interface Service {
   id: string;
-  image1: File | null;
-  image1Preview: string;
-  image2: File | null;
-  image2Preview: string;
+  serviceImage: ImageItem[];
+  purposeImage: ImageItem[];
   titleBangla: string;
   titleEnglish: string;
   tenors: TenorValue[];
@@ -38,7 +43,6 @@ const ServiceConfiguration = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [deleteServiceId, setDeleteServiceId] = useState<string>('');
-  const [publishType, setPublishType] = useState<'loan' | 'savings'>('loan');
   const [isPublishing, setIsPublishing] = useState(false);
   const { toast } = useToast();
 
@@ -54,82 +58,66 @@ const ServiceConfiguration = () => {
   const handleAddService = () => {
     const newService: Service = {
       id: Math.random().toString(36).substr(2, 9),
-      image1: null,
-      image1Preview: '',
-      image2: null,
-      image2Preview: '',
+      serviceImage: [],
+      purposeImage: [],
       titleBangla: '',
       titleEnglish: '',
       tenors: [],
       detailBangla: '',
       detailEnglish: ''
     };
-
     setCurrentServices([...getCurrentServices(), newService]);
   };
 
-  const handleImageUpload = (serviceId: string, imageType: 'image1' | 'image2', files: File[]) => {
-    const file = files[0];
+  const handleServiceImagesChange = (serviceId: string, field: 'serviceImage' | 'purposeImage', images: ImageItem[]) => {
     const services = getCurrentServices();
-    const updatedServices = services.map(service => 
-      service.id === serviceId 
-        ? { 
-            ...service, 
-            [imageType]: file,
-            [`${imageType}Preview`]: URL.createObjectURL(file)
-          }
-        : service
+    const updatedServices = services.map(service =>
+      service.id === serviceId ? { ...service, [field]: images } : service
     );
     setCurrentServices(updatedServices);
   };
 
   const handleServiceChange = (serviceId: string, field: keyof Service, value: any) => {
     const services = getCurrentServices();
-    const updatedServices = services.map(service => 
+    const updatedServices = services.map(service =>
       service.id === serviceId ? { ...service, [field]: value } : service
     );
     setCurrentServices(updatedServices);
   };
 
   const handleAddTenor = (serviceId: string) => {
+    const services = getCurrentServices();
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
+
     const newTenor: TenorValue = {
       id: Math.random().toString(36).substr(2, 9),
-      value: 0,
-      unit: activeTab === 'loan' ? 'years' : 'years'
+      value: 1,
+      unit: activeTab === 'loan' ? 'Years' : 'Years'
     };
 
-    const services = getCurrentServices();
-    const updatedServices = services.map(service => 
-      service.id === serviceId 
-        ? { ...service, tenors: [...service.tenors, newTenor] }
-        : service
-    );
-    setCurrentServices(updatedServices);
+    const updatedTenors = [...service.tenors, newTenor];
+    handleServiceChange(serviceId, 'tenors', updatedTenors);
   };
 
   const handleTenorChange = (serviceId: string, tenorId: string, field: 'value' | 'unit', value: any) => {
     const services = getCurrentServices();
-    const updatedServices = services.map(service => 
-      service.id === serviceId 
-        ? { 
-            ...service, 
-            tenors: service.tenors.map(tenor => 
-              tenor.id === tenorId ? { ...tenor, [field]: value } : tenor
-            )
-          }
-        : service
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
+
+    const updatedTenors = service.tenors.map(tenor =>
+      tenor.id === tenorId ? { ...tenor, [field]: value } : tenor
     );
-    setCurrentServices(updatedServices);
+    handleServiceChange(serviceId, 'tenors', updatedTenors);
   };
 
-  const handleDeleteTenor = (serviceId: string, tenorId: string) => {
+  const handleRemoveTenor = (serviceId: string, tenorId: string) => {
     const services = getCurrentServices();
-    const updatedServices = services.map(service => 
-      service.id === serviceId 
-        ? { ...service, tenors: service.tenors.filter(tenor => tenor.id !== tenorId) }
-        : service
-    );
-    setCurrentServices(updatedServices);
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
+
+    const updatedTenors = service.tenors.filter(tenor => tenor.id !== tenorId);
+    handleServiceChange(serviceId, 'tenors', updatedTenors);
   };
 
   const handleDeleteService = (serviceId: string) => {
@@ -144,60 +132,37 @@ const ServiceConfiguration = () => {
     setDeleteServiceId('');
     toast({
       title: "Service deleted",
-      description: "The service has been removed from both pages",
+      description: "The service has been removed",
     });
   };
 
-  const validateService = (service: Service): string[] => {
-    const errors: string[] = [];
-    
-    if (!service.image1) errors.push('Thumbnail for Services Page is required');
-    if (!service.image2) errors.push('Thumbnail for Purpose Page is required');
-    if (!service.titleBangla.trim()) errors.push('Title Bangla is required');
-    if (!service.titleEnglish.trim()) errors.push('Title English is required');
-    if (!service.detailBangla.trim()) errors.push('Detail Editor Bangla is required');
-    if (!service.detailEnglish.trim()) errors.push('Detail Editor English is required');
-    if (service.tenors.length === 0) errors.push('At least one tenor value must be provided');
-    
-    const invalidTenors = service.tenors.filter(tenor => !tenor.value || tenor.value <= 0);
-    if (invalidTenors.length > 0) errors.push('All tenor values must be greater than 0');
-
-    const tenorsWithoutUnit = service.tenors.filter(tenor => !tenor.unit);
-    if (tenorsWithoutUnit.length > 0) errors.push('Please select Years or Months for each tenor value');
-
-    return errors;
+  const validateService = (service: Service): string | null => {
+    if (service.serviceImage.length === 0) return "Service page image is required";
+    if (service.purposeImage.length === 0) return "Purpose page image is required";
+    if (!service.titleBangla.trim()) return "Bangla title is required";
+    if (!service.titleEnglish.trim()) return "English title is required";
+    if (service.tenors.length === 0) return "At least one tenor value is required";
+    if (service.tenors.some(t => !t.unit)) return "Please select Years or Months for each tenor value";
+    if (!service.detailBangla.trim()) return "Bangla detail content is required";
+    if (!service.detailEnglish.trim()) return "English detail content is required";
+    return null;
   };
 
   const handlePublish = () => {
     const services = getCurrentServices();
     
-    if (services.length === 0) {
-      toast({
-        title: "No services to publish",
-        description: "Add at least one service before publishing",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const validationErrors: string[] = [];
-    services.forEach((service, index) => {
-      const errors = validateService(service);
-      if (errors.length > 0) {
-        validationErrors.push(`Service ${index + 1}: ${errors.join(', ')}`);
+    for (const service of services) {
+      const error = validateService(service);
+      if (error) {
+        toast({
+          title: "Validation Error",
+          description: error,
+          variant: "destructive",
+        });
+        return;
       }
-    });
-
-    if (validationErrors.length > 0) {
-      toast({
-        title: "Validation Error",
-        description: validationErrors[0],
-        variant: "destructive",
-      });
-      return;
     }
 
-    setPublishType(activeTab as 'loan' | 'savings');
     setShowPublishDialog(true);
   };
 
@@ -208,8 +173,9 @@ const ServiceConfiguration = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      const serviceType = activeTab === 'loan' ? 'loan' : 'savings';
       toast({
-        title: `✅ ${publishType === 'loan' ? 'Loan' : 'Savings'} services published successfully`,
+        title: `✅ ${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} services published successfully`,
         description: "Updates will be visible in the app within one minute",
       });
     } catch (error) {
@@ -224,302 +190,286 @@ const ServiceConfiguration = () => {
     }
   };
 
-  const renderServiceForm = (service: Service) => (
-    <Card key={service.id} className="border-2">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">
-            {service.titleEnglish || service.titleBangla || 'New Service'}
-          </CardTitle>
-          <div className="flex gap-2">
-            <Button size="sm" variant="ghost">
-              <GripVertical className="w-4 h-4" />
-            </Button>
-            <Button size="sm" variant="ghost">
-              <Edit className="w-4 h-4" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant="destructive"
-              onClick={() => handleDeleteService(service.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Images */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-sm font-medium">
-              Thumbnail for Services Page <span className="text-destructive">*</span>
-            </Label>
-            {service.image1Preview ? (
-              <img
-                src={service.image1Preview}
-                alt="Services Page"
-                className="w-full h-32 object-cover rounded border mt-2"
-              />
-            ) : (
-              <div className="mt-2">
-                <ImageUpload
-                  onUpload={(files) => handleImageUpload(service.id, 'image1', files)}
-                  accept="image/jpeg,image/png"
-                  maxFiles={1}
-                />
-              </div>
-            )}
-          </div>
-          <div>
-            <Label className="text-sm font-medium">
-              Thumbnail for Purpose Page <span className="text-destructive">*</span>
-            </Label>
-            {service.image2Preview ? (
-              <img
-                src={service.image2Preview}
-                alt="Purpose Page"
-                className="w-full h-32 object-cover rounded border mt-2"
-              />
-            ) : (
-              <div className="mt-2">
-                <ImageUpload
-                  onUpload={(files) => handleImageUpload(service.id, 'image2', files)}
-                  accept="image/jpeg,image/png"
-                  maxFiles={1}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Titles */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor={`title-bangla-${service.id}`}>
-              Title Bangla <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id={`title-bangla-${service.id}`}
-              value={service.titleBangla}
-              onChange={(e) => handleServiceChange(service.id, 'titleBangla', e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor={`title-english-${service.id}`}>
-              Title English <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id={`title-english-${service.id}`}
-              value={service.titleEnglish}
-              onChange={(e) => handleServiceChange(service.id, 'titleEnglish', e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Tenor Management */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <Label className="text-sm font-medium">
-              Tenor Management <span className="text-destructive">*</span>
-            </Label>
-            <Button 
-              size="sm" 
-              onClick={() => handleAddTenor(service.id)}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Add Tenor
-            </Button>
-          </div>
-          
-          {service.tenors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tenor values added yet</p>
-          ) : (
-            <div className="space-y-2">
-              {service.tenors.map((tenor) => (
-                <div key={tenor.id} className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={tenor.value || ''}
-                    onChange={(e) => handleTenorChange(service.id, tenor.id, 'value', parseInt(e.target.value) || 0)}
-                    placeholder="Enter value"
-                    className="w-24"
-                  />
-                  <Select 
-                    value={tenor.unit}
-                    onValueChange={(value) => handleTenorChange(service.id, tenor.id, 'unit', value)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="years">Years</SelectItem>
-                      {activeTab === 'loan' && <SelectItem value="months">Months</SelectItem>}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeleteTenor(service.id, tenor.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Detail Editors */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor={`detail-bangla-${service.id}`}>
-              Detail Editor Bangla <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id={`detail-bangla-${service.id}`}
-              value={service.detailBangla}
-              onChange={(e) => handleServiceChange(service.id, 'detailBangla', e.target.value)}
-              placeholder="বাংলা বিস্তারিত..."
-              className="min-h-[100px] mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor={`detail-english-${service.id}`}>
-              Detail Editor English <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id={`detail-english-${service.id}`}
-              value={service.detailEnglish}
-              onChange={(e) => handleServiceChange(service.id, 'detailEnglish', e.target.value)}
-              placeholder="English details..."
-              className="min-h-[100px] mt-1"
-            />
-          </div>
-        </div>
-
-        {/* Mobile Preview */}
-        <Tabs defaultValue="bangla" className="w-full">
-          <TabsList>
-            <TabsTrigger value="bangla">Bangla Preview</TabsTrigger>
-            <TabsTrigger value="english">English Preview</TabsTrigger>
-          </TabsList>
-          <TabsContent value="bangla">
-            <Card className="p-3 max-w-sm">
-              <div className="space-y-2">
-                {service.image1Preview && (
-                  <img
-                    src={service.image1Preview}
-                    alt="Service"
-                    className="w-full h-24 object-cover rounded"
-                  />
-                )}
-                <h4 className="font-medium text-sm">{service.titleBangla}</h4>
-                <div className="text-xs">
-                  {service.tenors.map(tenor => `${tenor.value} ${tenor.unit === 'years' ? 'বছর' : 'মাস'}`).join(', ')}
-                </div>
-                <div className="text-sm">
-                  {service.detailBangla || <span className="text-muted-foreground italic">বাংলা প্রিভিউ...</span>}
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-          <TabsContent value="english">
-            <Card className="p-3 max-w-sm">
-              <div className="space-y-2">
-                {service.image1Preview && (
-                  <img
-                    src={service.image1Preview}
-                    alt="Service"
-                    className="w-full h-24 object-cover rounded"
-                  />
-                )}
-                <h4 className="font-medium text-sm">{service.titleEnglish}</h4>
-                <div className="text-xs">
-                  {service.tenors.map(tenor => `${tenor.value} ${tenor.unit}`).join(', ')}
-                </div>
-                <div className="text-sm">
-                  {service.detailEnglish || <span className="text-muted-foreground italic">English preview...</span>}
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <div className="p-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Service Configuration</h1>
         <p className="text-muted-foreground">
-          Manage loan and savings services
+          Manage loan and savings services with tenor flexibility
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="loan">Loan Services</TabsTrigger>
           <TabsTrigger value="savings">Savings Services</TabsTrigger>
         </TabsList>
 
         <TabsContent value="loan" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Loan Services ({loanServices.length})</h2>
-            <Button onClick={handleAddService}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Loan
-            </Button>
-          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Loan Services ({loanServices.length})</CardTitle>
+                <Button onClick={handleAddService}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Loan Service
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {loanServices.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No loan services added yet</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {loanServices.map((service, index) => (
+                    <Card key={service.id} className="border-2">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">Loan Service {index + 1}</CardTitle>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <GripVertical className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteService(service.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Images */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <Label className="text-sm font-medium">
+                              Service Page Image <span className="text-destructive">*</span>
+                            </Label>
+                            <div className="mt-2">
+                              <ImageUpload
+                                images={service.serviceImage}
+                                onImagesChange={(images) => handleServiceImagesChange(service.id, 'serviceImage', images)}
+                                maxImages={1}
+                                title="Upload Service Image"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">
+                              Purpose Page Image <span className="text-destructive">*</span>
+                            </Label>
+                            <div className="mt-2">
+                              <ImageUpload
+                                images={service.purposeImage}
+                                onImagesChange={(images) => handleServiceImagesChange(service.id, 'purposeImage', images)}
+                                maxImages={1}
+                                title="Upload Purpose Image"
+                              />
+                            </div>
+                          </div>
+                        </div>
 
-          {loanServices.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-muted-foreground">No loan services added yet</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {loanServices.map(renderServiceForm)}
-              <Button 
-                onClick={handlePublish}
-                disabled={isPublishing}
-                className="w-full"
-              >
-                {isPublishing ? 'Publishing...' : 'Publish Loan Services'}
-              </Button>
-            </div>
-          )}
+                        {/* Titles */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor={`title-bangla-${service.id}`}>
+                              Title (Bangla) <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id={`title-bangla-${service.id}`}
+                              value={service.titleBangla}
+                              onChange={(e) => handleServiceChange(service.id, 'titleBangla', e.target.value)}
+                              placeholder="বাংলা শিরোনাম"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`title-english-${service.id}`}>
+                              Title (English) <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              id={`title-english-${service.id}`}
+                              value={service.titleEnglish}
+                              onChange={(e) => handleServiceChange(service.id, 'titleEnglish', e.target.value)}
+                              placeholder="English Title"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Tenor Management */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium">
+                              Tenor Values <span className="text-destructive">*</span>
+                            </Label>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAddTenor(service.id)}
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Tenor
+                            </Button>
+                          </div>
+                          
+                          {service.tenors.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No tenor values added yet</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {service.tenors.map((tenor) => (
+                                <div key={tenor.id} className="flex items-center gap-2">
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    value={tenor.value}
+                                    onChange={(e) => handleTenorChange(service.id, tenor.id, 'value', parseInt(e.target.value) || 1)}
+                                    className="w-24"
+                                  />
+                                  <Select
+                                    value={tenor.unit}
+                                    onValueChange={(value) => handleTenorChange(service.id, tenor.id, 'unit', value)}
+                                  >
+                                    <SelectTrigger className="w-32">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Years">Years</SelectItem>
+                                      <SelectItem value="Months">Months</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Badge variant="secondary">
+                                    {tenor.value} {tenor.unit}
+                                  </Badge>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleRemoveTenor(service.id, tenor.id)}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Detail Content */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor={`detail-bangla-${service.id}`}>
+                              Detail Content (Bangla) <span className="text-destructive">*</span>
+                            </Label>
+                            <Textarea
+                              id={`detail-bangla-${service.id}`}
+                              value={service.detailBangla}
+                              onChange={(e) => handleServiceChange(service.id, 'detailBangla', e.target.value)}
+                              placeholder="বাংলা বিস্তারিত..."
+                              className="min-h-[100px]"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`detail-english-${service.id}`}>
+                              Detail Content (English) <span className="text-destructive">*</span>
+                            </Label>
+                            <Textarea
+                              id={`detail-english-${service.id}`}
+                              value={service.detailEnglish}
+                              onChange={(e) => handleServiceChange(service.id, 'detailEnglish', e.target.value)}
+                              placeholder="English details..."
+                              className="min-h-[100px]"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Mobile Preview */}
+                        <Tabs defaultValue="bangla" className="w-full">
+                          <TabsList>
+                            <TabsTrigger value="bangla">Bangla Preview</TabsTrigger>
+                            <TabsTrigger value="english">English Preview</TabsTrigger>
+                          </TabsList>
+                          <TabsContent value="bangla">
+                            <Card className="p-3 max-w-sm">
+                              <div className="space-y-2">
+                                {service.serviceImage.length > 0 && (
+                                  <img
+                                    src={service.serviceImage[0].url}
+                                    alt="Service"
+                                    className="w-full h-24 object-cover rounded"
+                                  />
+                                )}
+                                <div className="font-medium text-sm">{service.titleBangla || 'বাংলা শিরোনাম'}</div>
+                                <div className="text-xs">
+                                  {service.tenors.map(t => `${t.value} ${t.unit}`).join(', ') || 'টেনর তথ্য'}
+                                </div>
+                                <div className="text-xs">
+                                  {service.detailBangla || 'বিস্তারিত তথ্য...'}
+                                </div>
+                              </div>
+                            </Card>
+                          </TabsContent>
+                          <TabsContent value="english">
+                            <Card className="p-3 max-w-sm">
+                              <div className="space-y-2">
+                                {service.serviceImage.length > 0 && (
+                                  <img
+                                    src={service.serviceImage[0].url}
+                                    alt="Service"
+                                    className="w-full h-24 object-cover rounded"
+                                  />
+                                )}
+                                <div className="font-medium text-sm">{service.titleEnglish || 'English Title'}</div>
+                                <div className="text-xs">
+                                  {service.tenors.map(t => `${t.value} ${t.unit}`).join(', ') || 'Tenor information'}
+                                </div>
+                                <div className="text-xs">
+                                  {service.detailEnglish || 'Detail information...'}
+                                </div>
+                              </div>
+                            </Card>
+                          </TabsContent>
+                        </Tabs>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {loanServices.length > 0 && (
+                <Button 
+                  onClick={handlePublish}
+                  disabled={isPublishing}
+                  className="w-full"
+                >
+                  {isPublishing ? 'Publishing...' : 'Publish Loan Services'}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="savings" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Savings Services ({savingsServices.length})</h2>
-            <Button onClick={handleAddService}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Savings
-            </Button>
-          </div>
-
-          {savingsServices.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-muted-foreground">No savings services added yet</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {savingsServices.map(renderServiceForm)}
-              <Button 
-                onClick={handlePublish}
-                disabled={isPublishing}
-                className="w-full"
-              >
-                {isPublishing ? 'Publishing...' : 'Publish Savings Services'}
-              </Button>
-            </div>
-          )}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Savings Services ({savingsServices.length})</CardTitle>
+                <Button onClick={handleAddService}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Savings Service
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Savings services configuration similar to loans but with Years-only tenor</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
@@ -538,8 +488,9 @@ const ServiceConfiguration = () => {
       <ConfirmationDialog
         open={showPublishDialog}
         onOpenChange={setShowPublishDialog}
-        title={`Publish ${publishType} services`}
-        subtitle={`${publishType === 'loan' ? 'Loan services (with tenor values in years or months)' : 'Savings services'} will be visible in both Service Page and Application Purpose Page.`}
+        title={`Publish ${activeTab} services`}
+        subtitle={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} services will be visible in both Service Page and Application Purpose Page.`}
+        question="Do you want to publish now?"
         confirmText="Publish now"
         onConfirm={confirmPublish}
       />

@@ -9,40 +9,20 @@ import { useToast } from '@/hooks/use-toast';
 import ImageUpload from '../ImageUpload';
 import ConfirmationDialog from '../ConfirmationDialog';
 
-interface CarouselImage {
+interface ImageItem {
   id: string;
-  file: File;
-  preview: string;
+  url: string;
+  file?: File;
   link?: string;
 }
 
 const GuestHomepageCarousel = () => {
-  const [images, setImages] = useState<CarouselImage[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [deleteImageId, setDeleteImageId] = useState<string>('');
   const [isPublishing, setIsPublishing] = useState(false);
   const { toast } = useToast();
-
-  const handleImageUpload = (files: File[]) => {
-    if (images.length + files.length > 10) {
-      toast({
-        title: "Upload limit exceeded",
-        description: "You can upload a maximum of 10 images",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newImages = files.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      file,
-      preview: URL.createObjectURL(file),
-      link: ''
-    }));
-
-    setImages(prev => [...prev, ...newImages]);
-  };
 
   const handleDeleteImage = (imageId: string) => {
     setDeleteImageId(imageId);
@@ -158,60 +138,12 @@ const GuestHomepageCarousel = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <ImageUpload
-            onUpload={handleImageUpload}
-            accept="image/jpeg,image/png"
-            maxFiles={10 - images.length}
-            multiple
+            images={images}
+            onImagesChange={setImages}
+            maxImages={10}
+            allowLinks={true}
+            title="Upload Carousel Images"
           />
-
-          {images.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="font-medium">Carousel Images ({images.length}/10)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {images.map((image) => (
-                  <Card key={image.id} className="overflow-hidden">
-                    <div className="relative">
-                      <img
-                        src={image.preview}
-                        alt="Carousel"
-                        className="w-full h-32 object-cover"
-                      />
-                      <div className="absolute top-2 right-2 flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-                        >
-                          <GripVertical className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleDeleteImage(image.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <CardContent className="p-3">
-                      <Label htmlFor={`link-${image.id}`} className="text-sm">
-                        Link (Optional)
-                      </Label>
-                      <Input
-                        id={`link-${image.id}`}
-                        type="url"
-                        placeholder="https://example.com"
-                        value={image.link || ''}
-                        onChange={(e) => handleLinkChange(image.id, e.target.value)}
-                        className="mt-1"
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
 
           <Button 
             onClick={handlePublish}
