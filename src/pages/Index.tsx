@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import CMSLayout from '@/components/layout/CMSLayout';
 import LoginCarousel from '@/components/cms/pages/LoginCarousel';
 import TutorialVideo from '@/components/cms/pages/TutorialVideo';
+import GuestHomepageCarousel from '@/components/cms/pages/GuestHomepageCarousel';
+import BracSuccessStories from '@/components/cms/pages/BracSuccessStories';
+import BracServiceCarousel from '@/components/cms/pages/BracServiceCarousel';
+import ServiceConfiguration from '@/components/cms/pages/ServiceConfiguration';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('cms');
@@ -15,33 +19,13 @@ const Index = () => {
       case 'tutorial-video':
         return <TutorialVideo />;
       case 'guest-homepage-carousel':
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold mb-4">Guest Homepage Carousel</h1>
-            <p className="text-muted-foreground">Coming soon...</p>
-          </div>
-        );
+        return <GuestHomepageCarousel />;
       case 'brac-success-stories':
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold mb-4">BRAC Success Stories</h1>
-            <p className="text-muted-foreground">Coming soon...</p>
-          </div>
-        );
+        return <BracSuccessStories />;
       case 'brac-service-carousel':
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold mb-4">BRAC Sheba / BRAC Service Carousel</h1>
-            <p className="text-muted-foreground">Coming soon...</p>
-          </div>
-        );
+        return <BracServiceCarousel />;
       case 'service-configuration':
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold mb-4">Service Configuration</h1>
-            <p className="text-muted-foreground">Coming soon...</p>
-          </div>
-        );
+        return <ServiceConfiguration />;
       case 'campaign-management':
         return (
           <div className="p-8">
@@ -83,6 +67,24 @@ const Index = () => {
                    onClick={() => setActiveSection('guest-homepage-carousel')}>
                 <h3 className="font-semibold mb-2">Guest Homepage</h3>
                 <p className="text-sm text-muted-foreground">Configure guest homepage carousel</p>
+              </div>
+
+              <div className="cms-card p-6 cursor-pointer hover:shadow-lg transition-shadow"
+                   onClick={() => setActiveSection('brac-success-stories')}>
+                <h3 className="font-semibold mb-2">BRAC Success Stories</h3>
+                <p className="text-sm text-muted-foreground">Manage success stories content</p>
+              </div>
+
+              <div className="cms-card p-6 cursor-pointer hover:shadow-lg transition-shadow"
+                   onClick={() => setActiveSection('brac-service-carousel')}>
+                <h3 className="font-semibold mb-2">BRAC Services</h3>
+                <p className="text-sm text-muted-foreground">Configure service carousel tiles</p>
+              </div>
+
+              <div className="cms-card p-6 cursor-pointer hover:shadow-lg transition-shadow"
+                   onClick={() => setActiveSection('service-configuration')}>
+                <h3 className="font-semibold mb-2">Service Configuration</h3>
+                <p className="text-sm text-muted-foreground">Manage loan and savings services</p>
               </div>
             </div>
           </div>
