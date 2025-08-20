@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,7 +93,7 @@ const ServiceConfiguration = () => {
     const newTenor: TenorValue = {
       id: Math.random().toString(36).substr(2, 9),
       value: 1,
-      unit: activeTab === 'loan' ? 'Years' : 'Years'
+      unit: 'Years'
     };
 
     const updatedTenors = [...service.tenors, newTenor];
@@ -277,9 +276,6 @@ const ServiceConfiguration = () => {
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium">
               Tenor Values <span className="text-destructive">*</span>
-              {activeTab === 'savings' && (
-                <span className="text-muted-foreground ml-2">(Years only)</span>
-              )}
             </Label>
             <Button
               size="sm"
@@ -304,26 +300,20 @@ const ServiceConfiguration = () => {
                     onChange={(e) => handleTenorChange(service.id, tenor.id, 'value', parseInt(e.target.value) || 1)}
                     className="w-24"
                   />
-                  {activeTab === 'loan' ? (
-                    <Select
-                      value={tenor.unit}
-                      onValueChange={(value) => handleTenorChange(service.id, tenor.id, 'unit', value)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Years">Years</SelectItem>
-                        <SelectItem value="Months">Months</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div className="w-32 px-3 py-2 border rounded-md bg-muted text-muted-foreground">
-                      Years
-                    </div>
-                  )}
+                  <Select
+                    value={tenor.unit}
+                    onValueChange={(value) => handleTenorChange(service.id, tenor.id, 'unit', value)}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Years">Years</SelectItem>
+                      <SelectItem value="Months">Months</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Badge variant="secondary">
-                    {tenor.value} {activeTab === 'savings' ? 'Years' : tenor.unit}
+                    {tenor.value} {tenor.unit}
                   </Badge>
                   <Button
                     size="sm"
@@ -384,7 +374,7 @@ const ServiceConfiguration = () => {
                 )}
                 <div className="font-medium text-sm">{service.titleBangla || 'বাংলা শিরোনাম'}</div>
                 <div className="text-xs">
-                  {service.tenors.map(t => `${t.value} ${activeTab === 'savings' ? 'Years' : t.unit}`).join(', ') || 'টেনর তথ্য'}
+                  {service.tenors.map(t => `${t.value} ${t.unit}`).join(', ') || 'টেনর তথ্য'}
                 </div>
                 <div className="text-xs">
                   {service.detailBangla || 'বিস্তারিত তথ্য...'}
@@ -404,7 +394,7 @@ const ServiceConfiguration = () => {
                 )}
                 <div className="font-medium text-sm">{service.titleEnglish || 'English Title'}</div>
                 <div className="text-xs">
-                  {service.tenors.map(t => `${t.value} ${activeTab === 'savings' ? 'Years' : t.unit}`).join(', ') || 'Tenor information'}
+                  {service.tenors.map(t => `${t.value} ${t.unit}`).join(', ') || 'Tenor information'}
                 </div>
                 <div className="text-xs">
                   {service.detailEnglish || 'Detail information...'}
