@@ -428,7 +428,7 @@ const ServiceConfiguration = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="loan">Loan Services</TabsTrigger>
+          <TabsTrigger value="loan">Loan Purpose</TabsTrigger>
           <TabsTrigger value="savings">Savings Services</TabsTrigger>
         </TabsList>
 
@@ -436,17 +436,17 @@ const ServiceConfiguration = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Loan Services ({loanServices.length})</CardTitle>
+                <CardTitle>Loan Purpose ({loanServices.length})</CardTitle>
                 <Button onClick={handleAddService}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Loan Service
+                  Add Loan Purpose
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {loanServices.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No loan services added yet</p>
+                  <p className="text-muted-foreground">No loan purposes added yet</p>
                 </div>
               ) : (
                 <div className="space-y-8">
@@ -460,7 +460,7 @@ const ServiceConfiguration = () => {
                   disabled={isPublishing}
                   className="w-full"
                 >
-                  {isPublishing ? 'Publishing...' : 'Publish Loan Services'}
+                  {isPublishing ? 'Publishing...' : 'Publish Loan Purposes'}
                 </Button>
               )}
             </CardContent>
