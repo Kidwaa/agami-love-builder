@@ -15,15 +15,20 @@
     "jsx": "react-jsx",
 
     /* Linting */
-    "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitAny": false,
-    "noFallthroughCasesInSwitch": false,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@dnd-kit/core": ["./src/vendor/dnd-core.tsx"],
+      "@dnd-kit/sortable": ["./src/vendor/dnd-sortable.tsx"],
+      "@toast-ui/react-editor": ["./src/components/RichTextEditor.tsx"],
+      "i18next": ["./src/vendor/i18next.ts"],
+      "react-i18next": ["./src/vendor/react-i18next.tsx"]
     }
   },
   "include": ["src"]
