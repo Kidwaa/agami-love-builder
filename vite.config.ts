@@ -17,6 +17,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@dnd-kit/core": path.resolve(__dirname, "./src/vendor/dnd-core.tsx"),
+      "@dnd-kit/sortable": path.resolve(__dirname, "./src/vendor/dnd-sortable.tsx"),
+      "@toast-ui/react-editor": path.resolve(__dirname, "./src/components/RichTextEditor.tsx"),
+      "i18next": path.resolve(__dirname, "./src/vendor/i18next.ts"),
+      "react-i18next": path.resolve(__dirname, "./src/vendor/react-i18next.tsx"),
     },
   },
 }));
