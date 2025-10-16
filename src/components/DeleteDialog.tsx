@@ -1,4 +1,4 @@
-import React from "react";
+
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useTranslation } from "@/vendor/react-i18next";
 

@@ -1,4 +1,4 @@
-import React from "react";
+
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "@/vendor/react-i18next";
 import { loginCarouselRepo } from "@/features/loginCarousel/repo";

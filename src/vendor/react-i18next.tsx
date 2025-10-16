@@ -23,7 +23,7 @@ export function useTranslation() {
   }, [i18n]);
 
   return {
-    t: (key: string) => i18n.t(key),
+    t: (key: string, params?: Record<string, any>) => i18n.t(key, params),
     i18n,
     language,
   };
@@ -43,8 +43,8 @@ export function useI18nInstance(resources: Resource, lng: string) {
   return instance;
 }
 
-export function withTranslation(Component: React.ComponentType) {
-  return function Wrapper(props: React.ComponentProps<typeof Component>) {
+export function withTranslation(Component: React.ComponentType<any>) {
+  return function Wrapper(props: any) {
     const { t } = useTranslation();
     return <Component {...props} t={t} />;
   };

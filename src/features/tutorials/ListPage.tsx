@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { tutorialsRepo } from "./repo";
 import { publishTutorials } from "./publish";
@@ -43,14 +43,14 @@ export function TutorialsPage() {
   const { isViewer } = useRole();
 
   const tutorialsQuery = useQuery({ queryKey: ["tutorials"], queryFn: () => tutorialsRepo.list() });
-  const [primary, setPrimary] = React.useState<TutorialVideo | null>(null);
-  const [generics, setGenerics] = React.useState<TutorialVideo[]>([]);
-  const [isDirty, setIsDirty] = React.useState(false);
-  const [publishOpen, setPublishOpen] = React.useState(false);
-  const [isPublishing, setIsPublishing] = React.useState(false);
-  const [editingGeneric, setEditingGeneric] = React.useState<TutorialVideo | null>(null);
+  const [primary, setPrimary] = useState<TutorialVideo | null>(null);
+  const [generics, setGenerics] = useState<TutorialVideo[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [editingGeneric, setEditingGeneric] = useState<TutorialVideo | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (tutorialsQuery.data) {
       const prim = tutorialsQuery.data.find((video) => video.kind === "PRIMARY") ?? null;
       const genericItems = tutorialsQuery.data
@@ -62,7 +62,7 @@ export function TutorialsPage() {
     }
   }, [tutorialsQuery.data]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setPublishAction({
       label: t("actions.publish"),
       onClick: () => setPublishOpen(true),
@@ -80,7 +80,7 @@ export function TutorialsPage() {
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (primary) {
       primaryForm.reset({
         titleEn: primary.titleEn,
@@ -146,7 +146,7 @@ export function TutorialsPage() {
     defaultValues: { titleEn: "", titleBn: "", videoUrl: "" },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (editingGeneric) {
       editForm.reset({
         titleEn: editingGeneric.titleEn,
@@ -184,7 +184,7 @@ export function TutorialsPage() {
     }
     const items: TutorialVideo[] = [
       { ...primary, orderIndex: 0 },
-      ...generics.map((item, index) => ({ ...item, kind: "GENERIC", orderIndex: index })),
+      ...generics.map((item, index) => ({ ...item, kind: "GENERIC" as const, orderIndex: index })),
     ];
     await tutorialsRepo.replaceAll(items);
     await queryClient.invalidateQueries({ queryKey: ["tutorials"] });

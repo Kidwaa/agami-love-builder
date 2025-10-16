@@ -32,9 +32,15 @@ class I18n {
     }
   }
 
-  t(key: string) {
+  t(key: string, params?: Record<string, any>) {
     const translation = this.resources[this.language]?.translation;
-    return translation?.[key] ?? key;
+    let text = translation?.[key] ?? key;
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
+      });
+    }
+    return text;
   }
 }
 

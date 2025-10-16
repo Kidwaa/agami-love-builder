@@ -1,4 +1,3 @@
-import React from "react";
 import { Outlet, useLocation, useMatches } from "react-router-dom";
 import { Sidebar } from "@/app/Sidebar";
 import { TopBar } from "@/app/TopBar";
@@ -10,8 +9,8 @@ export function Layout() {
   const location = useLocation();
   const matches = useMatches();
   const breadcrumbs = matches
-    .filter((match) => match.handle?.breadcrumb)
-    .map((match) => ({ label: match.handle!.breadcrumb as string, path: match.pathname || location.pathname }));
+    .filter((match) => (match.handle as any)?.breadcrumb)
+    .map((match) => ({ label: (match.handle as any)!.breadcrumb as string, path: match.pathname || location.pathname }));
 
   return (
     <RoleProvider>

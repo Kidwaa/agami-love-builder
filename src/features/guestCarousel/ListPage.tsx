@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/vendor/react-i18next";
 import { guestCarouselRepo } from "./repo";
@@ -43,22 +43,22 @@ export function GuestCarouselPage() {
   const { setPublishAction } = usePageActions();
   const { isViewer } = useRole();
 
-  const [draftItems, setDraftItems] = React.useState<GuestCarouselItem[]>([]);
-  const [isDirty, setIsDirty] = React.useState(false);
-  const [deleteId, setDeleteId] = React.useState<string | null>(null);
-  const [publishOpen, setPublishOpen] = React.useState(false);
-  const [isPublishing, setIsPublishing] = React.useState(false);
-  const [editItem, setEditItem] = React.useState<GuestCarouselItem | null>(null);
-  const [addOpen, setAddOpen] = React.useState(false);
+  const [draftItems, setDraftItems] = useState<GuestCarouselItem[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [editItem, setEditItem] = useState<GuestCarouselItem | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (itemsQuery.data) {
       setDraftItems(itemsQuery.data.sort((a, b) => a.orderIndex - b.orderIndex));
       setIsDirty(false);
     }
   }, [itemsQuery.data]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setPublishAction({
       label: t("actions.publish"),
       onClick: () => setPublishOpen(true),
@@ -139,7 +139,7 @@ export function GuestCarouselPage() {
     defaultValues: { imageUrl: "", linkUrl: "", isActive: true },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (editItem) {
       editForm.reset({
         imageUrl: editItem.imageUrl,
@@ -208,7 +208,7 @@ export function GuestCarouselPage() {
                     <p className="text-sm font-medium text-slate-700">{item.imageUrl}</p>
                     <p className="text-xs text-slate-500">{item.linkUrl}</p>
                     <div className="flex items-center gap-2">
-                      <Switch checked={item.isActive} onChange={(event) => handleToggleActive(item.id, event.target.checked)} disabled={isViewer} />
+                      <Switch checked={item.isActive} onChange={(e) => handleToggleActive(item.id, e.target.checked)} disabled={isViewer} />
                       <span className="text-xs text-slate-600">Active</span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -292,7 +292,7 @@ export function GuestCarouselPage() {
               ) : null}
             </div>
             <div className="flex items-center gap-2">
-              <Switch checked={editForm.watch("isActive")} onChange={(event) => editForm.setValue("isActive", event.target.checked)} />
+              <Switch checked={editForm.watch("isActive")} onChange={(e) => editForm.setValue("isActive", e.target.checked)} />
               <span className="text-xs text-slate-600">Active</span>
             </div>
             <DialogFooter>
