@@ -1,10 +1,37 @@
+const ALLOWED_STYLE_PROPS = new Set(["text-align", "background-color", "color"]);
+
+function filterInlineStyles(styleValue: string) {
+  return styleValue
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => part)
+    .map((part) => {
+      const [rawProp, ...rest] = part.split(":");
+      if (!rawProp || rest.length === 0) return null;
+      const prop = rawProp.trim().toLowerCase();
+      if (!ALLOWED_STYLE_PROPS.has(prop)) return null;
+      const value = rest.join(":").trim();
+      return value ? `${prop}: ${value}` : null;
+    })
+    .filter((part): part is string => Boolean(part))
+    .join("; ");
+}
+
 export function sanitizeRichText(value: string): string {
   if (!value) return "";
   if (typeof window === "undefined") {
     return value
       .replace(/<img[^>]*>/gi, "")
-      .replace(/style=\"[^\"]*\"/gi, "")
+      .replace(/style=\"([^\"]*)\"/gi, (_, styles: string) => {
+        const filtered = filterInlineStyles(styles);
+        return filtered ? `style=\"${filtered}\"` : "";
+      })
+      .replace(/style='([^']*)'/gi, (_, styles: string) => {
+        const filtered = filterInlineStyles(styles);
+        return filtered ? `style='${filtered}'` : "";
+      })
       .replace(/href=\"(?!https?:)[^\"]*\"/gi, "")
+      .replace(/href='(?!https?:)[^']*'/gi, "")
       .trim();
   }
   const div = window.document.createElement("div");
@@ -18,7 +45,14 @@ export function sanitizeRichText(value: string): string {
     }
   });
   div.querySelectorAll("*").forEach((element) => {
-    element.removeAttribute("style");
+    const style = element.getAttribute("style");
+    if (!style) return;
+    const filtered = filterInlineStyles(style);
+    if (filtered) {
+      element.setAttribute("style", filtered);
+    } else {
+      element.removeAttribute("style");
+    }
   });
   return div.innerHTML;
 }
@@ -37,7 +71,7 @@ export function stripHtml(value: string): string {
 export function containsInvalidLinks(value: string): boolean {
   if (!value) return false;
   if (typeof window === "undefined") {
-    return /href\s*=\s*"(?!https?:)/i.test(value);
+    return /href\s*=\s*"(?!https?:)/i.test(value) || /href\s*=\s*'(?!https?:)/i.test(value);
   }
   const div = window.document.createElement("div");
   div.innerHTML = value;

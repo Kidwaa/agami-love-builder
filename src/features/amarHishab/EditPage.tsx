@@ -33,10 +33,11 @@ const richTextSchema = (maxLength?: number) =>
       if (typeof maxLength === "number" && length > maxLength) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Must be ${maxLength} characters or fewer` });
       }
-      if (containsInvalidLinks(sanitized)) {
+      if (containsInvalidLinks(value)) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Links must be http or https" });
       }
-    });
+    })
+    .transform((value) => sanitizeRichText(value));
 
 const formSchema = z.object({
   titleEn: z.string().min(1, "Required"),
@@ -106,8 +107,8 @@ export function AmarHishabBenefitsPage() {
   const watchAll = form.watch();
   const debouncedValues = useDebouncedValue(watchAll, 300);
 
-  const summaryRemainingEn = Math.max(0, 300 - richTextLength(sanitizeRichText(watchAll.summaryEn ?? "")));
-  const summaryRemainingBn = Math.max(0, 300 - richTextLength(sanitizeRichText(watchAll.summaryBn ?? "")));
+  const summaryRemainingEnRaw = 300 - richTextLength(sanitizeRichText(watchAll.summaryEn ?? ""));
+  const summaryRemainingBnRaw = 300 - richTextLength(sanitizeRichText(watchAll.summaryBn ?? ""));
 
   const triggerUpload = React.useCallback((setter: React.Dispatch<React.SetStateAction<number>>) => {
     setter(5);
@@ -298,7 +299,13 @@ export function AmarHishabBenefitsPage() {
                   />
                   <div className="flex justify-between text-xs text-slate-500">
                     <span>
-                      {lang === "en" ? summaryRemainingEn : summaryRemainingBn} {t("amarHishab.charactersLeft")}
+                      {lang === "en"
+                        ? summaryRemainingEnRaw >= 0
+                          ? `${summaryRemainingEnRaw} ${t("amarHishab.charactersLeft")}`
+                          : t("amarHishab.charactersOver", { count: Math.abs(summaryRemainingEnRaw) })
+                        : summaryRemainingBnRaw >= 0
+                        ? `${summaryRemainingBnRaw} ${t("amarHishab.charactersLeft")}`
+                        : t("amarHishab.charactersOver", { count: Math.abs(summaryRemainingBnRaw) })}
                     </span>
                     {lang === "en" && form.formState.errors.summaryEn ? (
                       <span className="text-red-600">{form.formState.errors.summaryEn.message}</span>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PhonePreview } from "@/components/PhonePreview";
 import { useTranslation } from "@/vendor/react-i18next";
 import { cn } from "@/utils/cn";
+import { toast } from "sonner";
 
 interface PublishDialogProps {
   open: boolean;
@@ -19,8 +20,21 @@ interface PublishDialogProps {
 export function PublishDialog({ open, onClose, onConfirm, preview, payload, version, title, subtitle }: PublishDialogProps) {
   const { t } = useTranslation();
   const [viewJson, setViewJson] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
 
   const json = React.useMemo(() => JSON.stringify(payload, null, 2), [payload]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(json);
+      setCopied(true);
+      toast.success(t("toast.copied"));
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error(error);
+      toast.error(t("toast.error"));
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={(value) => (!value ? onClose() : undefined)}>
@@ -45,6 +59,9 @@ export function PublishDialog({ open, onClose, onConfirm, preview, payload, vers
           <div className="space-y-3">
             <Button variant="outline" onClick={() => setViewJson((prev) => !prev)}>
               {viewJson ? t("actions.close") : t("actions.viewJson")}
+            </Button>
+            <Button variant="outline" onClick={handleCopy} disabled={!viewJson}>
+              {copied ? t("actions.copied") : t("actions.copyJson")}
             </Button>
             <pre className={cn("max-h-[420px] overflow-auto rounded-lg border border-slate-200 bg-slate-950 p-4 text-xs text-slate-100", viewJson ? "block" : "hidden md:block")}>{json}</pre>
           </div>
